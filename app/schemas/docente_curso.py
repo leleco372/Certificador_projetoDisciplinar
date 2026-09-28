@@ -1,7 +1,7 @@
 from pydantic import BaseModel as SCBaseModel, ConfigDict
 
 
-class DocenteSchema(SCBaseModel):
+class DocenteCursoSchema(SCBaseModel):
     id_professor: int
     id_curso: int
 

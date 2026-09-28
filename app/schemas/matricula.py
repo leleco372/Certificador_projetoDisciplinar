@@ -8,6 +8,6 @@ class MatriculaSchema(SCBaseModel):
     id_curso: int
     faltas: int
     grade_de_horarios: str
-    notas: str
+    notas: int
 
     model_config = ConfigDict(from_attributes=True)

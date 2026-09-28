@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
-from core.configs import settings
+from app.core.configs import settings
 
 class ProfessorModel(settings.DBBaseModel):
     __tablename__ = "professores"

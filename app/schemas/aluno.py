@@ -7,8 +7,7 @@ class AlunoSchema(SCBaseModel):
 
     nome: str
 
-    senha: int
-
-    email: int
+    senha: str
+    email: str
 
     model_config = ConfigDict(from_attributes=True)

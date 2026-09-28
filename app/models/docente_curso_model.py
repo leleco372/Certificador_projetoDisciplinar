@@ -1,11 +1,11 @@
 from sqlalchemy import Column, Integer, ForeignKey
-from core.configs import settings
+from app.core.configs import settings
 
-from models.professor_model import ProfessorModel
-from models.curso_model import CursoModel
+from app.models.professor_model import ProfessorModel
+from app.models.curso_model import CursoModel
 
 
-class DocenteModel(settings.DBBaseModel):
+class DocenteCursoModel(settings.DBBaseModel):
 
     __tablename__ = "docente"
 

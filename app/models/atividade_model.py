@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Date, ForeignKey
-from core.configs import settings
+from app.core.configs import settings
 
 
 class AtividadeModel(settings.DBBaseModel):
