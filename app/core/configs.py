@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
-    DB_URL: str = "mysql+aiomysql://root:110806le@localhost:3306/sistema_certificacao"
+    DB_URL: str = "mysql+aiomysql://root:majuh2005!@localhost:3306/sistema_certificacao"
     DBBaseModel: ClassVar = declarative_base()
 
     #Secret gerado com comando no terminal

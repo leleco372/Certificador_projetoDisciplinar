@@ -12,6 +12,11 @@ class CursoModel(settings.DBBaseModel):
         autoincrement=True
     )
 
+    nome = Column(
+        String(50)
+    )
+
+
     hora = Column(
         String(50)
     )

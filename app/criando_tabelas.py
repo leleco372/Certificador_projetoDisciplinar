@@ -1,8 +1,8 @@
-from core.configs import settings
-from core.database import engine
+from app.core.configs import settings
+from app.core.database import engine
 
 async def create_tables()->None:
-    import models.__all_models
+    import app.models.__all_models
     print ("criando as tabelas no db")
 
     async with engine.begin() as conn:

@@ -46,33 +46,36 @@ async def get_aluno(aluno_id:int, db:AsyncSession=Depends(get_session)):
             status_code=status.HTTP_404_NOT_FOUND
         )
 
-@router.put("/{aluno_id}", response_model=AlunoSchema,status_code=status.HTTP_202_ACCEPTED)
-async def put_aluno(aluno_id:int,aluno:AlunoSchema, db:AsyncSession=Depends(get_session)):
-    async with db as session:
-        query=select(AlunoModel).filter(AlunoModel.id_institucional == aluno_id)
-        result=await session.execute(query)
-        aluno_up: AlunoSchema = result.unique().scalar_one_or_none()
-        if aluno_up:
+@router.put("/{aluno_id}", response_model=AlunoSchema,
+            status_code=status.HTTP_202_ACCEPTED)
+async def put_aluno(
+    aluno_id: int,
+    aluno: AlunoSchema,
+    db: AsyncSession = Depends(get_session)
+):
+    query = select(AlunoModel).where(
+        AlunoModel.id_institucional == aluno_id
+    )
 
-            if aluno_up.nome:
-              aluno_up.nome = aluno_up.nome
+    result = await db.execute(query)
+    aluno_up = result.scalar_one_or_none()
 
-            if aluno_up.email:
-                aluno_up.email = aluno_up.email
+    if aluno_up:
+        aluno_up.nome = aluno.nome
+        aluno_up.email = aluno.email
+        aluno_up.senha = aluno.senha
 
-            if aluno_up.senha:
-                aluno_up.senha = aluno_up.senha
+        await db.commit()
+        await db.refresh(aluno_up)
 
-            await session.commit()
+        return aluno_up
 
-            return aluno_up
-
-        else:
-
-            raise HTTPException(
-                detail=f"aluno com id {aluno_id} não encontrado.",
-                status_code=status.HTTP_404_NOT_FOUND
-            )
+    else:
+        raise HTTPException(
+            detail=f"Aluno com id {aluno_id} não encontrado.",
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+    
 @router.delete("/{aluno_id}",status_code=status.HTTP_200_OK)
 async def delete_aluno(aluno_id:int, db:AsyncSession=Depends(get_session)):
     async with db as session:
