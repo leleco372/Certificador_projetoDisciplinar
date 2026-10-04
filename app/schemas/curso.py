@@ -4,6 +4,7 @@ from pydantic import BaseModel as SCBaseModel, ConfigDict
 
 class CursoSchema(SCBaseModel):
     id_curso: Optional[int] = None
+    nome: str
     hora: str
     ementa: str
 

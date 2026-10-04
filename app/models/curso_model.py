@@ -13,14 +13,17 @@ class CursoModel(settings.DBBaseModel):
     )
 
     nome = Column(
-        String(50)
+        String(50),
+        nullable=False
     )
 
 
     hora = Column(
-        String(50)
+        String(50),
+        nullable=False
     )
 
     ementa = Column(
-        String(255)
+        String(255),
+        nullable=False
     )
