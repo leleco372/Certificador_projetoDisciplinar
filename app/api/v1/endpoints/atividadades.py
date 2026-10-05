@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from typing import List
 from app.core.database import get_session
 from app.models.atividade_model import AtividadeModel
 from app.schemas.atividade import AtividadeSchema
@@ -10,8 +10,6 @@ from app.schemas.atividade import AtividadeSchema
 router = APIRouter(
     prefix="/atividades"
 )
-
-
 
 @router.post("/", response_model=AtividadeSchema, status_code=status.HTTP_201_CREATED
 )
@@ -23,7 +21,7 @@ async def create_atividade(atividade: AtividadeSchema,db: AsyncSession = Depends
             data_entrega=atividade.data_entrega,
             descricao=atividade.descricao,
             id_curso=atividade.id_curso,
-            gmail=atividade.gmail
+            id_professor=atividade.id_professor
         )
 
         session.add(nova_atividade)
@@ -33,7 +31,13 @@ async def create_atividade(atividade: AtividadeSchema,db: AsyncSession = Depends
 
         return nova_atividade
 
-
+@router.get("/", response_model=List[AtividadeSchema], status_code=status.HTTP_200_OK)
+async def get_atividades(db: AsyncSession = Depends(get_session)):
+    async with db as session:
+        query = select(AtividadeModel)
+        result = await session.execute(query)
+        atividades = result.scalars().unique().all()
+        return atividades
 
 @router.get(
     "/{atividade_id}",
@@ -92,7 +96,7 @@ async def update_atividade(
         atividade_db.data_entrega = atividade.data_entrega
         atividade_db.descricao = atividade.descricao
         atividade_db.id_curso = atividade.id_curso
-        atividade_db.gmail = atividade.gmail
+        id_professor=atividade.id_professor
 
         await session.commit()
         await session.refresh(atividade_db)

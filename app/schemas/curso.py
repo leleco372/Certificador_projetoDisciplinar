@@ -1,8 +1,8 @@
 from typing import Optional
-from pydantic import BaseModel as SCBaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict
 
 
-class CursoSchema(SCBaseModel):
+class CursoSchema(BaseModel):
     id_curso: Optional[int] = None
     nome: str
     hora: str

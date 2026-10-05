@@ -1,7 +1,6 @@
 from app.models.aluno_model import AlunoModel
 from app.models.atividade_model import AtividadeModel
 from app.models.curso_model import CursoModel
-from app.models.docente_curso_model import DocenteCursoModel
 from app.models.matricula_model import MatriculaModel
 from app.models.professor_model import ProfessorModel
 

@@ -9,24 +9,36 @@ from sqlalchemy.exc import IntegrityError
 
 router=APIRouter(prefix="/curso")
 
-@router.post("/", response_model=CursoSchema, status_code=status.HTTP_201_CREATED)
-async def post_cruso(curso:CursoSchema, db:AsyncSession=Depends(get_session)):
+@router.post(
+    "/",
+    response_model=CursoSchema,
+    status_code=status.HTTP_201_CREATED
+)
+async def post_curso(
+    curso: CursoSchema,
+    db: AsyncSession = Depends(get_session)
+):
     curso_novo: CursoModel = CursoModel(
+        nome=curso.nome,
         hora=curso.hora,
         ementa=curso.ementa
     )
+
     async with db as session:
         session.add(curso_novo)
-        session.commit()
-        return curso_novo
 
-@router.get("/",response_model=List[CursoSchema],status_code=status.HTTP_200_OK)
-async def get_cursos(db:AsyncSession=Depends(get_session)):
-      async with db as session:
-            query=select(CursoModel)
-            result= await session.execute(query)
-            cursos: List[CursoSchema]=result.scalar().unique().all()
-            return cursos
+        await session.commit()
+        await session.refresh(curso_novo)
+
+        return curso_novo
+    
+@router.get("/", response_model=List[CursoSchema], status_code=status.HTTP_200_OK)
+async def get_cursos(db: AsyncSession = Depends(get_session)):
+    async with db as session:
+        query = select(CursoModel)
+        result = await session.execute(query)
+        cursos = result.scalars().unique().all()
+        return cursos
 
 @router.get("/{curso_id}",response_model=CursoSchema)
 async def get_curso(curso_id:int,db:AsyncSession=Depends(get_session)):
@@ -49,10 +61,12 @@ async def put_aluno(curso_id:int,curso:CursoSchema, db:AsyncSession=Depends(get_
         curso_up: CursoSchema = result.unique().scalar_one_or_none()
         if curso_up:
 
+            if curso_up.nome:
+                curso_up.nome = curso_up.nome
             if curso_up.hora:
-              curso_up.hora = curso_up.hora
+                curso_up.hora = curso_up.hora
             if curso_up.ementa:
-                 curso_up.ementa = curso_up.hora
+                 curso_up.ementa = curso_up.ementa
             await session.commit()
 
             return curso_up
