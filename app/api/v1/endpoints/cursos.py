@@ -1,13 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, status,Response
+
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from app.core.database import get_session
-from app.models.curso_model import CursoModel
+from app.core.deps import get_professor_atual
+from app.core.models.curso_model import CursoModel
+from app.core.models.professor_model import ProfessorModel
 from app.schemas.curso import CursoSchema
-from sqlalchemy.exc import IntegrityError
 
-router=APIRouter(prefix="/curso")
+
+router = APIRouter(prefix="/curso", tags=["Cursos"])
+
 
 @router.post(
     "/",
@@ -16,81 +20,119 @@ router=APIRouter(prefix="/curso")
 )
 async def post_curso(
     curso: CursoSchema,
-    db: AsyncSession = Depends(get_session)
+    db: AsyncSession = Depends(get_session),
+    professor_atual: ProfessorModel = Depends(get_professor_atual)
 ):
-    curso_novo: CursoModel = CursoModel(
-        nome=curso.nome,
-        hora=curso.hora,
-        ementa=curso.ementa
-    )
-
     async with db as session:
-        session.add(curso_novo)
+        curso_novo = CursoModel(
+            nome=curso.nome,
+            hora=curso.hora,
+            ementa=curso.ementa
+        )
 
+        session.add(curso_novo)
         await session.commit()
         await session.refresh(curso_novo)
 
         return curso_novo
-    
-@router.get("/", response_model=List[CursoSchema], status_code=status.HTTP_200_OK)
-async def get_cursos(db: AsyncSession = Depends(get_session)):
+
+
+@router.get(
+    "/",
+    response_model=List[CursoSchema],
+    status_code=status.HTTP_200_OK
+)
+async def get_cursos(
+    db: AsyncSession = Depends(get_session),
+    professor_atual: ProfessorModel = Depends(get_professor_atual)
+):
     async with db as session:
         query = select(CursoModel)
         result = await session.execute(query)
         cursos = result.scalars().unique().all()
+
         return cursos
 
-@router.get("/{curso_id}",response_model=CursoSchema)
-async def get_curso(curso_id:int,db:AsyncSession=Depends(get_session)):
-    async with db as session:
-            query=select(CursoModel).filter(CursoModel.id_curso==id_curso)
-            result= await session.execute(query)
-            curso = result.unique().scalar_one_or_none()
 
-            if curso:
-                return curso
+@router.get("/{curso_id}", response_model=CursoSchema)
+async def get_curso(
+    curso_id: int,
+    db: AsyncSession = Depends(get_session),
+    professor_atual: ProfessorModel = Depends(get_professor_atual)
+):
+    async with db as session:
+        query = select(CursoModel).filter(
+            CursoModel.id_curso == curso_id
+        )
+
+        result = await session.execute(query)
+        curso = result.scalar_one_or_none()
+
+        if curso:
+            return curso
+
+        raise HTTPException(
+            detail=f"Curso com id {curso_id} não encontrado.",
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+
+
+@router.put(
+    "/{curso_id}",
+    response_model=CursoSchema,
+    status_code=status.HTTP_202_ACCEPTED
+)
+async def put_curso(
+    curso_id: int,
+    curso: CursoSchema,
+    db: AsyncSession = Depends(get_session),
+    professor_atual: ProfessorModel = Depends(get_professor_atual)
+):
+    async with db as session:
+        query = select(CursoModel).filter(
+            CursoModel.id_curso == curso_id
+        )
+
+        result = await session.execute(query)
+        curso_up = result.scalar_one_or_none()
+
+        if not curso_up:
             raise HTTPException(
-                detail=f"curso com id {curso_id} não encontrado.",
+                detail=f"Curso com id {curso_id} não encontrado.",
                 status_code=status.HTTP_404_NOT_FOUND
             )
-@router.put("/{curso_id}", response_model=CursoSchema,status_code=status.HTTP_202_ACCEPTED)
-async def put_aluno(curso_id:int,curso:CursoSchema, db:AsyncSession=Depends(get_session)):
+
+        curso_up.nome = curso.nome
+        curso_up.hora = curso.hora
+        curso_up.ementa = curso.ementa
+
+        await session.commit()
+        await session.refresh(curso_up)
+
+        return curso_up
+
+
+@router.delete("/{curso_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_curso(
+    curso_id: int,
+    db: AsyncSession = Depends(get_session),
+    professor_atual: ProfessorModel = Depends(get_professor_atual)
+):
     async with db as session:
-        query=select(CursoSchema).filter(CursoModel.id_institucional == curso_id)
-        result=await session.execute(query)
-        curso_up: CursoSchema = result.unique().scalar_one_or_none()
-        if curso_up:
+        query = select(CursoModel).filter(
+            CursoModel.id_curso == curso_id
+        )
 
-            if curso_up.nome:
-                curso_up.nome = curso_up.nome
-            if curso_up.hora:
-                curso_up.hora = curso_up.hora
-            if curso_up.ementa:
-                 curso_up.ementa = curso_up.ementa
-            await session.commit()
+        result = await session.execute(query)
+        curso_del = result.scalar_one_or_none()
 
-            return curso_up
-
-        else:
-
+        if not curso_del:
             raise HTTPException(
-                detail=f"curso com id {curso_id} não encontrado.",
+                detail=f"Curso com id {curso_id} não encontrado.",
                 status_code=status.HTTP_404_NOT_FOUND
             )
 
-@router.delete("/{curso_id}", response_model=CursoSchema,status_code=status.HTTP_202_ACCEPTED)
-async def delete_aluno(curso_id:int,curso:CursoSchema, db:AsyncSession=Depends(get_session)):
-    async with db as session:
-        query=select(CursoSchema).filter(CursoModel.id_institucional == curso_id)
-        result=await session.execute(query)
-        curso_del: CursoSchema = result.unique().scalar_one_or_none()
-    if curso_del:
         await session.delete(curso_del)
         await session.commit()
-        return Response(
-            status_code=status.HTTP_204_NO_CONTENT
-        )
-    raise HTTPException(
-                    detail=f"curso com id {curso_id} não encontrado.",
-                    status_code=status.HTTP_404_NOT_FOUND
-                )
+
+        return Response(status_code=status.HTTP_204_NO_CONTENT)

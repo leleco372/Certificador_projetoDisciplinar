@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from app.core.configs import settings
-from app.models.matricula_model import MatriculaModel
+from app.core.models.matricula_model import MatriculaModel
 
 class AlunoModel(settings.DBBaseModel):
     __tablename__ = "aluno"

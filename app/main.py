@@ -1,8 +1,8 @@
 from fastapi import FastAPI
-
+from app.core.configs import settings
 from app.api.v1.api import api_router
 
-app = FastAPI()
+app = FastAPI(title="Projeto Certificação", version="1.0.0", description="API RESTful para gestão acadêmica, cursos, matrículas e certificação.")
 
 app.include_router(api_router)
 

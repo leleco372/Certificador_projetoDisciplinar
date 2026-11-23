@@ -3,13 +3,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from app.core.database import get_session
-from app.models.atividade_model import AtividadeModel
+from app.core.models.atividade_model import AtividadeModel
 from app.schemas.atividade import AtividadeSchema
 
 
-router = APIRouter(
-    prefix="/atividades"
-)
+router = APIRouter(prefix="/atividades", tags=["Atividades"])
 
 @router.post("/", response_model=AtividadeSchema, status_code=status.HTTP_201_CREATED
 )

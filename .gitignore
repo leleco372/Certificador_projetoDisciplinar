@@ -14,3 +14,15 @@ __pycache__/
 # Arquivos do sistema
 .DS_Store
 Thumbs.db
+
+# Testes automatizados
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Cache adicional
+*.pyo
+
+# Scripts locais de criação de usuários de teste
+criar_aluno_teste.py
+criar_professor_teste.py

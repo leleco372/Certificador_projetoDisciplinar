@@ -1,25 +1,33 @@
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
-from app.models.professor_model import ProfessorModel
-from app.schemas.professor import ProfessorSchema
+from app.core.models.professor_model import ProfessorModel
+from app.schemas.professor import ProfessorSchema, ProfessorRespostaSchema
+from app.core.security import gerar_hash_senha
+from app.core.deps import get_professor_atual
 
-router = APIRouter(
-    prefix="/professores"
+
+router = APIRouter(prefix="/professores", tags=["Professores"])
+
+
+@router.post(
+    "/",
+    response_model=ProfessorRespostaSchema,
+    status_code=status.HTTP_201_CREATED
 )
-
-@router.post("/", response_model=ProfessorSchema, status_code=status.HTTP_201_CREATED)
 async def create_professor(
     professor: ProfessorSchema,
-    db: AsyncSession = Depends(get_session)
+    db: AsyncSession = Depends(get_session),
+    professor_atual: ProfessorModel = Depends(get_professor_atual)
 ):
     async with db as session:
         novo_professor = ProfessorModel(
             email=professor.email,
             nome=professor.nome,
-            senha=professor.senha
+            senha=gerar_hash_senha(professor.senha)
         )
 
         session.add(novo_professor)
@@ -29,10 +37,14 @@ async def create_professor(
         return novo_professor
 
 
-@router.get("/{professor_id}", response_model=ProfessorSchema)
+@router.get(
+    "/{professor_id}",
+    response_model=ProfessorRespostaSchema
+)
 async def get_professor(
     professor_id: int,
-    db: AsyncSession = Depends(get_session)
+    db: AsyncSession = Depends(get_session),
+    professor_atual: ProfessorModel = Depends(get_professor_atual)
 ):
     async with db as session:
         query = select(ProfessorModel).filter(
@@ -51,9 +63,10 @@ async def get_professor(
         )
 
 
-@router.get("/", response_model=list[ProfessorSchema])
+@router.get("/", response_model=list[ProfessorRespostaSchema])
 async def get_professores(
-    db: AsyncSession = Depends(get_session)
+    db: AsyncSession = Depends(get_session),
+    professor_atual: ProfessorModel = Depends(get_professor_atual)
 ):
     async with db as session:
         query = select(ProfessorModel)
@@ -64,11 +77,15 @@ async def get_professores(
         return professores
 
 
-@router.put("/{professor_id}", response_model=ProfessorSchema)
+@router.put(
+    "/{professor_id}",
+    response_model=ProfessorRespostaSchema
+)
 async def update_professor(
     professor_id: int,
     professor: ProfessorSchema,
-    db: AsyncSession = Depends(get_session)
+    db: AsyncSession = Depends(get_session),
+    professor_atual: ProfessorModel = Depends(get_professor_atual)
 ):
     async with db as session:
         query = select(ProfessorModel).filter(
@@ -86,7 +103,7 @@ async def update_professor(
 
         professor_db.email = professor.email
         professor_db.nome = professor.nome
-        professor_db.senha = professor.senha
+        professor_db.senha = gerar_hash_senha(professor.senha)
 
         await session.commit()
         await session.refresh(professor_db)
@@ -97,7 +114,8 @@ async def update_professor(
 @router.delete("/{professor_id}")
 async def delete_professor(
     professor_id: int,
-    db: AsyncSession = Depends(get_session)
+    db: AsyncSession = Depends(get_session),
+    professor_atual: ProfessorModel = Depends(get_professor_atual)
 ):
     async with db as session:
         query = select(ProfessorModel).filter(
