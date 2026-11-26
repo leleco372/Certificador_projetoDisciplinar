@@ -1,5 +1,6 @@
 # Ambiente virtual
 venv/
+.venv/
 
 # Cache do Python
 __pycache__/
@@ -26,3 +27,5 @@ htmlcov/
 # Scripts locais de criação de usuários de teste
 criar_aluno_teste.py
 criar_professor_teste.py
+
+*.db
