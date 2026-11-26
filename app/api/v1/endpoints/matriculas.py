@@ -5,8 +5,10 @@ from app.core.database import get_session
 from app.core.models.matricula_model import MatriculaModel
 from app.core.deps import get_usuario_atual, get_professor_atual
 from app.schemas.matricula import MatriculaSchema
+from app.services.matricula_service import MatriculaService
 
 router = APIRouter(prefix="/matriculas", tags=["Matriculas"])
+
 
 @router.post(
     "/",
@@ -19,18 +21,9 @@ async def create_matricula(
     professor=Depends(get_professor_atual)
 ):
     async with db as session:
-        nova_matricula = MatriculaModel(
-            id_institucional=matricula.id_institucional,
-            id_curso=matricula.id_curso,
-            faltas=matricula.faltas,
-            grade_de_horarios=matricula.grade_de_horarios,
-            notas=matricula.notas
-        )
-        session.add(nova_matricula)
-        await session.commit()
-        await session.refresh(nova_matricula)
-        return nova_matricula
-    
+        return await MatriculaService.criar_matricula(session, matricula)
+
+
 @router.get("/{matricula_id}", response_model=MatriculaSchema)
 async def get_matricula(
     matricula_id: int,
@@ -58,6 +51,7 @@ async def get_matricula(
             )
         return matricula
 
+
 @router.get("/", response_model=list[MatriculaSchema])
 async def get_matriculas(
     db: AsyncSession = Depends(get_session),
@@ -66,8 +60,8 @@ async def get_matriculas(
     async with db as session:
         query = select(MatriculaModel)
         result = await session.execute(query)
-        matriculas = result.scalars().all()
-        return matriculas
+        return result.scalars().all()
+
 
 @router.put("/{matricula_id}", response_model=MatriculaSchema)
 async def update_matricula(
@@ -91,10 +85,11 @@ async def update_matricula(
         matricula_db.id_curso = matricula.id_curso
         matricula_db.faltas = matricula.faltas
         matricula_db.grade_de_horarios = matricula.grade_de_horarios
-        matricula_db.notas = matricula.notas
+        matricula_db.notas = str(matricula.notas)
         await session.commit()
         await session.refresh(matricula_db)
         return matricula_db
+
 
 @router.delete("/{matricula_id}")
 async def delete_matricula(
