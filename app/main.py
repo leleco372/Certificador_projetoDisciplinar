@@ -1,9 +1,20 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
 from app.api.v1.api import api_router
 from app.core.configs import settings
+from app.core.database import engine
+from app.core.models import __all_models  # noqa: F401
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with engine.begin() as conn:
+        await conn.run_sync(settings.DBBaseModel.metadata.create_all)
+    yield
+
 
 tags_metadata = [
     {"name": "Autenticação", "description": "Login via OAuth2/JWT e consulta de perfil autenticado."},
@@ -22,6 +33,7 @@ app = FastAPI(
     ),
     version="1.0.0",
     openapi_tags=tags_metadata,
+    lifespan=lifespan,
 )
 
 
